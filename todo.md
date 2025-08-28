@@ -1,0 +1,7 @@
+- [x] command documentation
+- [ ] command: store api key for later use
+- [x] command: compare local/remote update times to list local changes
+	- [ ] allow diffing directory
+- [ ] allow forbidden file types for supporters
+- [x] parse json and display results prettily
+- [x] remove path length limitations
