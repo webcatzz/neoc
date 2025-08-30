@@ -1,5 +1,9 @@
-/* api interface.
-   all functions return a json string response, or null if the request failed.
+/* api interface */
+
+#define KEY_LENGTH 32
+
+/* api methods.
+   all functions return a json string response, or null if the method failed.
    see https://neocities.org/api for more information on the api methods */
 
 // either `key` or `sitename` may be null, but not both.

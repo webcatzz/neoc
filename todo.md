@@ -5,3 +5,4 @@
 - [ ] allow forbidden file types for supporters
 - [x] parse json and display results prettily
 - [x] remove path length limitations
+- [ ] support windows

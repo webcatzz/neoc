@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include "api.h"
 #include "cli.h"
 
-#define KEY_SIZE 32
-#define SITENAME_MAX_SIZE 32
+#define SITENAME_MAX_LENGTH 32
 #define ALLOWED_EXTENSION_COUNT 67
 #define ERROR_KEY_NULL "provide api key"
-#define ERROR_KEY_SIZE "api key must be 32 characters in length"
-#define ERROR_SITENAME_SIZE "sitename cannot exceed 32 characters"
+#define ERROR_KEY_LENGTH "api key must be 32 characters in length"
+#define ERROR_SITENAME_LENGTH "sitename cannot exceed 32 characters"
 
 const char* allowed_extensions[ALLOWED_EXTENSION_COUNT] = {"apng", "asc", "atom", "avif", "bin", "cjs", "css", "csv", "dae", "eot", "epub", "geojson", "gif", "glb", "glsl", "gltf", "gpg", "htm", "html", "ico", "jpeg", "jpg", "js", "json", "key", "kml", "knowl", "less", "manifest", "map", "markdown", "md", "mf", "mid", "midi", "mjs", "mtl", "obj", "opml", "osdx", "otf", "pdf", "pgp", "pls", "png", "py", "rdf", "resolveHandle", "rss", "sass", "scss", "svg", "text", "toml", "ts", "tsv", "ttf", "txt", "webapp", "webmanifest", "webp", "woff", "woff2", "xcf", "xml", "yaml", "yml"};
 
@@ -16,8 +16,8 @@ const char* allowed_extensions[ALLOWED_EXTENSION_COUNT] = {"apng", "asc", "atom"
 
 // adds a key authorization header to a curl string list
 struct curl_slist* curl_slist_append_key(struct curl_slist* list, const char* key) {
-	char header[23 + KEY_SIZE] = "Authorization: Bearer ";
-	strncat(header, key, KEY_SIZE);
+	char header[23 + KEY_LENGTH] = "Authorization: Bearer ";
+	strncat(header, key, KEY_LENGTH);
 	list = curl_slist_append(list, header);
 	return list;
 }
@@ -60,8 +60,8 @@ char* curl_request(CURL* curl) {
 
 char* api_info(const char* key, const char* sitename) {
 	if (!key && !sitename) {print_error(ERROR_KEY_NULL" or sitename"); return NULL;}
-	if (key && strlen(key) != KEY_SIZE) {print_error(ERROR_KEY_SIZE); return NULL;}
-	if (sitename && strlen(sitename) > SITENAME_MAX_SIZE) {print_error(ERROR_SITENAME_SIZE); return NULL;}
+	if (key && strlen(key) != KEY_LENGTH) {print_error(ERROR_KEY_LENGTH); return NULL;}
+	if (sitename && strlen(sitename) > SITENAME_MAX_LENGTH) {print_error(ERROR_SITENAME_LENGTH); return NULL;}
 	// creating curl
 	CURL* curl = curl_easy_init();
 	if (!curl) {print_error(ERROR_ALLOCATION); return NULL;}
@@ -74,8 +74,8 @@ char* api_info(const char* key, const char* sitename) {
 	}
 	// building url
 	if (sitename) {
-		char url[41 + SITENAME_MAX_SIZE] = "https://neocities.org/api/info?sitename=";
-		strncat(url, sitename, SITENAME_MAX_SIZE);
+		char url[41 + SITENAME_MAX_LENGTH] = "https://neocities.org/api/info?sitename=";
+		strncat(url, sitename, SITENAME_MAX_LENGTH);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 	}
 	else curl_easy_setopt(curl, CURLOPT_URL, "https://neocities.org/api/info");
@@ -89,7 +89,7 @@ char* api_info(const char* key, const char* sitename) {
 
 char* api_list(const char* key, const char* directory) {
 	if (!key) {print_error(ERROR_KEY_NULL); return NULL;}
-	if (strlen(key) != KEY_SIZE) {print_error(ERROR_KEY_SIZE); return NULL;}
+	if (strlen(key) != KEY_LENGTH) {print_error(ERROR_KEY_LENGTH); return NULL;}
 	// creating curl
 	CURL* curl = curl_easy_init();
 	if (!curl) {print_error(ERROR_ALLOCATION); return NULL;}
@@ -115,7 +115,7 @@ char* api_list(const char* key, const char* directory) {
 
 char* api_upload(const char* key, size_t filec, const char** files) {
 	if (!key) {print_error(ERROR_KEY_NULL); return NULL;}
-	if (strlen(key) != KEY_SIZE) {print_error(ERROR_KEY_SIZE); return NULL;}
+	if (strlen(key) != KEY_LENGTH) {print_error(ERROR_KEY_LENGTH); return NULL;}
 	if (!filec) {print_error("provide files"); return NULL;}
 	// creating curl
 	CURL* curl = curl_easy_init();
@@ -146,7 +146,7 @@ char* api_upload(const char* key, size_t filec, const char** files) {
 
 char* api_delete(const char* key, size_t filec, const char** files) {
 	if (!key) {print_error(ERROR_KEY_NULL); return NULL;}
-	if (strlen(key) != KEY_SIZE) {print_error(ERROR_KEY_SIZE); return NULL;}
+	if (strlen(key) != KEY_LENGTH) {print_error(ERROR_KEY_LENGTH); return NULL;}
 	if (!filec) {print_error("provide files"); return NULL;}
 	// creating curl
 	CURL* curl = curl_easy_init();

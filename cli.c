@@ -5,11 +5,12 @@
 #include <time.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <termios.h>
 #include "cli.h"
 #include "api.h"
 #include "json.h"
 
+#define KEY_SIZE (KEY_LENGTH + 1)
 #define ARRAY_REALLOC_STEP 32
 #define ERROR_FILE_LIST_EMPTY "couldn't find any files"
 #define ERROR_RESPONSE_FETCH "couldn't fetch response"
@@ -36,11 +37,19 @@ int main(int argc, const char** args) {
 /* helpers */
 
 // grabs key from environment if available, or asks for user input
-char* get_key() {
+void get_key(char key[KEY_SIZE]) {
 	char* env = getenv("NEOCAPI");
-	if (env) return env;
+	if (env) {memcpy(key, env, KEY_SIZE); return;}
+
+  struct termios old_flags, new_flags;
+  if (tcgetattr(fileno(stdin), &old_flags)) return;
+  new_flags = old_flags;
+	new_flags.c_lflag &= ~ECHO;
+  if (tcsetattr(fileno(stdin), TCSAFLUSH, &new_flags)) return;
 	print_input("(need your api key...)");
-	return getpass(NULL);
+	fgets(key, KEY_SIZE, stdin);
+	tcsetattr(fileno(stdin), TCSAFLUSH, &old_flags);
+	printf("\n");
 }
 
 int response_successful(struct JSONIndex* index) {
@@ -192,7 +201,9 @@ void cmd_help(size_t argc, const char** args) {
 void cmd_info(size_t argc, const char** args) {
 	// fetching info
 	print_loading("directing spies");
-	char* response = argc ? api_info(NULL, *args) : api_info(get_key(), NULL);
+	char key[KEY_SIZE];
+	get_key(key);
+	char* response = argc ? api_info(NULL, *args) : api_info(key, NULL);
 	if (!response) {print_error(ERROR_RESPONSE_FETCH); return;}
 	// parsing response
 	struct JSONIndex* index = json_index_object(response);
@@ -243,7 +254,9 @@ void cmd_info(size_t argc, const char** args) {
 void cmd_list(size_t argc, const char** args) {
 	// fetching file list
 	print_loading("conducting census");
-	char* response = api_list(get_key(), argc ? *args : NULL);
+	char key[KEY_SIZE];
+	get_key(key);
+	char* response = api_list(key, argc ? *args : NULL);
 	if (!response) {print_error(ERROR_RESPONSE_FETCH); return;}
 	// parsing response
 	struct JSONIndex* index = json_index_object(response);
@@ -300,7 +313,9 @@ void cmd_upload(size_t argc, const char** args) {
 	if (getchar() != 'y') {print_error("canceled upload"); goto cleanup_paths;}
 	// uploading files
 	print_loading("carrying files");
-	char* response = api_upload(get_key(), pathc, (const char**)paths);
+	char key[KEY_SIZE];
+	get_key(key);
+	char* response = api_upload(key, pathc, (const char**)paths);
 	if (!response) {print_error(ERROR_RESPONSE_FETCH); goto cleanup_paths;}
 	// printing response
 	struct JSONIndex* index = json_index_object(response);
@@ -319,7 +334,9 @@ void cmd_delete(size_t argc, const char** args) {
 	if (getchar() != 'y') {print_error("canceled delete"); return;}
 	// deleting files
 	print_loading("letting loose");
-	char* response = api_delete(get_key(), argc, args);
+	char key[KEY_SIZE];
+	get_key(key);
+	char* response = api_delete(key, argc, args);
 	if (!response) {print_error(ERROR_RESPONSE_FETCH); return;}
 	// printing response
 	struct JSONIndex* index = json_index_object(response);
@@ -349,7 +366,9 @@ void cmd_diff(size_t argc, const char** args) {
 		local_times[i] = statbuf.st_mtime;
 	}
 	// fetching remote file list
-	char* response = api_list(get_key(), NULL);
+	char key[KEY_SIZE];
+	get_key(key);
+	char* response = api_list(key, NULL);
 	if (!response) {print_error(ERROR_RESPONSE_FETCH); goto cleanup_local_times;}
 	// parsing response
 	struct JSONIndex* index = json_index_object(response);
