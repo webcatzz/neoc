@@ -21,7 +21,7 @@ void cmd_info(size_t argc, const char** args);
 void cmd_list(size_t argc, const char** args);
 
 // usage: upload [paths]
-// recursively uploads local files to the remote root. separate multiple paths with spaces
+// recursively uploads local files to the remote root. separate multiple paths with spaces; exclude paths by prefixing them with '-'
 // if [paths] is absent, uploads all local files
 void cmd_upload(size_t argc, const char** args);
 

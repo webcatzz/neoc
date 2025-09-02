@@ -175,7 +175,8 @@ void cmd_help(size_t argc, const char** args) {
 	else if (!strcmp(*args, "upload")) printf(
 	"    \e[32mupload\e[0m [paths]\n"
 	"    recursively uploads local files to the remote\n"
-	"    root. separate multiple paths with spaces.\n"
+	"    root. separate multiple paths with spaces;\n"
+	"    exclude paths by prefixing them with '-'.\n"
 	"      if [paths] is absent, uploads all local files.\n\n"
 	);
 	else if (!strcmp(*args, "delete")) printf(
@@ -298,13 +299,26 @@ void cmd_upload(size_t argc, const char** args) {
 	size_t pathc = 0;
 	if (!argc) pathc = paths_add(&paths, 0, ".");
 	else for (size_t i = 0; i < argc; i++) {
-		pathc = paths_add(&paths, pathc, args[i]);
-		if (!paths) break;
+		if (*args[i] == '-') {
+			const char* cmpstr = args[i] + 1;
+			size_t cmplen = strlen(cmpstr);
+			size_t j = 0;
+			for (size_t k = 0; k < pathc; j++, k++) {
+				while (k < pathc && !strncmp(paths[k], cmpstr, cmplen)) free(paths[k++]);
+				if (k < pathc) paths[j] = paths[k];
+			}
+			pathc = j;
+		}
+		else {
+			pathc = paths_add(&paths, pathc, args[i]);
+			if (!paths) break;
+		}
 	}
 	if (!paths) {print_error(ERROR_ALLOCATION); return;}
 	if (!pathc) {print_error(ERROR_FILE_LIST_EMPTY); goto cleanup_paths;}
+	qsort(paths, pathc, sizeof(char*), string_sort);
 	// printing file list
-	print_success("found files:\n");
+	print_success("found %d files:\n", pathc);
 	for (size_t i = 0; i < pathc; i++)
 		printf("    %s\n", paths[i]);
 	printf("\n");
